@@ -32,6 +32,7 @@
 #include "blfwk/BusPalPeripheral.h"
 #include "blfwk/SerialPacketizer.h"
 #include "blfwk/UartPeripheral.h"
+#include "blfwk/D2xxPeripheral.h"
 #include "blfwk/UsbHidPacketizer.h"
 #include "blfwk/UsbHidPeripheral.h"
 #include "blfwk/format_string.h"
@@ -62,7 +63,7 @@ Bootloader::Bootloader()
     if (Log::getLogger() == NULL)
     {
         this->m_logger = new FileLogger("bootloader.log");
-        this->m_logger->setFilterLevel(Logger::kDebug2 /*Logger::kInfo*/);
+        this->m_logger->setFilterLevel(Logger::log_level_t::kDebug2 /*Logger::kInfo*/);
         Log::setLogger(this->m_logger);
     }
 }
@@ -76,13 +77,13 @@ Bootloader::Bootloader(const Peripheral::PeripheralConfigData &config)
     if (Log::getLogger() == NULL)
     {
         this->m_logger = new FileLogger("bootloader.log");
-        this->m_logger->setFilterLevel(Logger::kDebug2 /*Logger::kInfo*/);
+        this->m_logger->setFilterLevel(Logger::log_level_t::kDebug2 /*Logger::kInfo*/);
         Log::setLogger(this->m_logger);
     }
 
     switch (config.peripheralType)
     {
-        case Peripheral::kHostPeripheralType_UART:
+        case Peripheral::_host_peripheral_types::kHostPeripheralType_UART:
         {
             UartPeripheral *peripheral = new UartPeripheral(config.comPortName.c_str(), config.comPortSpeed);
             m_hostPacketizer = new SerialPacketizer(peripheral, config.packetTimeoutMs);
@@ -104,7 +105,7 @@ Bootloader::Bootloader(const Peripheral::PeripheralConfigData &config)
 
             break;
         }
-        case Peripheral::kHostPeripheralType_USB_HID:
+        case Peripheral::_host_peripheral_types::kHostPeripheralType_USB_HID:
         {
             UsbHidPeripheral *peripheral =
                 new UsbHidPeripheral(config.usbHidVid, config.usbHidPid, config.usbHidSerialNumber.c_str());
@@ -112,7 +113,7 @@ Bootloader::Bootloader(const Peripheral::PeripheralConfigData &config)
 
             break;
         }
-        case Peripheral::kHostPeripheralType_BUSPAL_UART:
+        case Peripheral::_host_peripheral_types::kHostPeripheralType_BUSPAL_UART:
         {
             BusPalUartPeripheral *peripheral =
                 new BusPalUartPeripheral(config.comPortName.c_str(), config.comPortSpeed, config.busPalConfig);
@@ -134,6 +135,28 @@ Bootloader::Bootloader(const Peripheral::PeripheralConfigData &config)
                 }
                 catch (const std::exception &e)
                 {
+                    throw std::runtime_error(format_string("Error: Initial ping failure: %s", e.what()));
+                }
+            }
+
+            break;
+        }
+        case Peripheral::_host_peripheral_types::kHostPeripheralType_D2XX:
+        {
+            D2xxPeripheral* peripheral = new D2xxPeripheral(config.deviceName.c_str(), config.comPortSpeed);
+            m_hostPacketizer = new SerialPacketizer(peripheral, config.packetTimeoutMs);
+
+            if (config.ping)
+            {
+                // Send initial ping.
+                try
+                {
+                    ping(30, 1000, config.comPortSpeed); // Ping 3 times with a delay of 1 s between the ping commands
+                }
+                catch (const std::exception& e)
+                {
+                    delete m_hostPacketizer;
+                    m_hostPacketizer = NULL;
                     throw std::runtime_error(format_string("Error: Initial ping failure: %s", e.what()));
                 }
             }
@@ -258,11 +281,11 @@ void Bootloader::ping(int retries, unsigned int delay, int comSpeed)
             // report ping failure in JSON output mode.
             Json::Value root;
             root["command"] = "ping";
-            root["status"] = Json::Value(Json::objectValue);
+            root["status"] = Json::Value(Json::ValueType::objectValue);
             root["status"]["value"] = static_cast<int32_t>(status);
             root["status"]["description"] =
                 format_string("%d (0x%X) %s", status, status, cmd.getStatusMessage(status).c_str());
-            root["response"] = Json::Value(Json::arrayValue);
+            root["response"] = Json::Value(Json::ValueType::arrayValue);
 
             Json::StyledWriter writer;
             Log::json(writer.write(root).c_str());

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,6 +19,8 @@
     <ClInclude Include="..\..\..\src\blfwk\BusPal.h" />
     <ClInclude Include="..\..\..\src\blfwk\BusPalPeripheral.h" />
     <ClInclude Include="..\..\..\src\blfwk\Command.h" />
+    <ClInclude Include="..\..\..\src\blfwk\D2xxDriver.h" />
+    <ClInclude Include="..\..\..\src\blfwk\D2xxPeripheral.h" />
     <ClInclude Include="..\..\..\src\blfwk\DataSource.h" />
     <ClInclude Include="..\..\..\src\blfwk\DataSourceImager.h" />
     <ClInclude Include="..\..\..\src\blfwk\DataTarget.h" />
@@ -27,6 +29,7 @@
     <ClInclude Include="..\..\..\src\blfwk\EndianUtilities.h" />
     <ClInclude Include="..\..\..\src\blfwk\ExcludesListMatcher.h" />
     <ClInclude Include="..\..\..\src\blfwk\format_string.h" />
+    <ClInclude Include="..\..\..\src\blfwk\FTD2XX.H" />
     <ClInclude Include="..\..\..\src\blfwk\GHSSecInfo.h" />
     <ClInclude Include="..\..\..\src\blfwk\GlobMatcher.h" />
     <ClInclude Include="..\..\..\src\blfwk\HexValues.h" />
@@ -73,6 +76,8 @@
     <ClCompile Include="..\..\..\src\blfwk\src\BusPal.cpp" />
     <ClCompile Include="..\..\..\src\blfwk\src\BusPalPeripheral.cpp" />
     <ClCompile Include="..\..\..\src\blfwk\src\Command.cpp" />
+    <ClCompile Include="..\..\..\src\blfwk\src\D2xxDriver.cpp" />
+    <ClCompile Include="..\..\..\src\blfwk\src\D2xxPeripheral.cpp" />
     <ClCompile Include="..\..\..\src\blfwk\src\DataSource.cpp" />
     <ClCompile Include="..\..\..\src\blfwk\src\DataSourceImager.cpp" />
     <ClCompile Include="..\..\..\src\blfwk\src\DataTarget.cpp" />
@@ -118,13 +123,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>

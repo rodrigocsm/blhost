@@ -40,7 +40,7 @@
 using namespace blfwk;
 
 SBSourceFile::SBSourceFile(const std::string &path)
-    : BinarySourceFile(path, kSBSourceFile)
+    : BinarySourceFile(path, source_file_t::kSBSourceFile)
 {
 }
 
@@ -85,7 +85,7 @@ bool SBSourceFile::isSBFile(std::istream &stream)
             (header.m_signature2[0] != 's' || header.m_signature2[1] != 'g' || header.m_signature2[2] != 't' ||
              header.m_signature2[3] != 'l'))
         {
-            Log::log(Logger::kWarning, "warning: invalid SB signature 2\n");
+            Log::log(Logger::log_level_t::kWarning, "warning: invalid SB signature 2\n");
         }
 
         return true;

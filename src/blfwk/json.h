@@ -321,7 +321,7 @@ namespace Json
 {
 /** \brief Type of the value held by a Value object.
  */
-enum ValueType
+enum class ValueType
 {
     nullValue = 0, ///< 'null' value
     intValue,      ///< signed integer value
@@ -333,7 +333,7 @@ enum ValueType
     objectValue    ///< object value (collection of name/value pairs).
 };
 
-enum CommentPlacement
+enum class CommentPlacement
 {
     commentBefore = 0,      ///< a comment placed on the line before a value
     commentAfterOnSameLine, ///< a comment just after a value on the same line
@@ -450,7 +450,7 @@ private:
     class CZString
     {
     public:
-        enum DuplicationPolicy
+        enum class DuplicationPolicy
         {
             noDuplication = 0,
             duplicate,
@@ -498,7 +498,7 @@ public:
   Json::Value obj_value(Json::objectValue); // {}
   \endcode
     */
-    Value(ValueType type = nullValue);
+    Value(ValueType type = ValueType::nullValue);
     Value(Int value);
     Value(UInt value);
 #if defined(JSON_HAS_INT64)
@@ -776,7 +776,7 @@ public:
     PathArgument(const std::string &key);
 
 private:
-    enum Kind
+    enum class Kind
     {
         kindNone = 0,
         kindIndex,
@@ -1434,7 +1434,7 @@ public:
     std::string getFormattedErrorMessages() const;
 
 private:
-    enum TokenType
+    enum class TokenType
     {
         tokenEndOfStream = 0,
         tokenObjectBegin,
@@ -1462,7 +1462,7 @@ private:
 
     class ErrorInfo
     {
-    public:
+    public:       
         Token token_;
         std::string message_;
         Location extra_;
@@ -1491,7 +1491,7 @@ private:
     bool addError(const std::string &message, Token &token, Location extra = 0);
     bool recoverFromError(TokenType skipUntilToken);
     bool addErrorAndRecover(const std::string &message, Token &token, TokenType skipUntilToken);
-    void skipUntilSpace();
+    void skipUntilSpace() {}
     Value &currentValue();
     Char getNextChar();
     void getLocationLineAndColumn(Location location, int &line, int &column) const;

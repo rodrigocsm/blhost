@@ -54,9 +54,9 @@
 using namespace blfwk;
 
 ELFSourceFile::ELFSourceFile(const std::string &path)
-    : SourceFile(path, kELFSourceFile)
-    , m_toolset(kUnknownToolset)
-    , m_secinfoOption(kSecinfoDefault)
+    : SourceFile(path, source_file_t::kELFSourceFile)
+    , m_toolset(elf_toolset_t::kUnknownToolset)
+    , m_secinfoOption(secinfo_clear_t::kSecinfoDefault)
 {
 }
 
@@ -84,9 +84,9 @@ void ELFSourceFile::open()
 
     // Read option and select default value
     m_secinfoOption = readSecinfoClearOption();
-    if (m_secinfoOption == kSecinfoDefault)
+    if (m_secinfoOption == secinfo_clear_t::kSecinfoDefault)
     {
-        m_secinfoOption = kSecinfoCStartupClear;
+        m_secinfoOption = secinfo_clear_t::kSecinfoCStartupClear;
     }
 
     // Open the stream
@@ -99,15 +99,15 @@ void ELFSourceFile::open()
     switch (m_toolset)
     {
         // default toolset is GHS
-        case kGHSToolset:
-        case kUnknownToolset:
-            m_file->setELFVariant(eGHSVariant);
+        case elf_toolset_t::kGHSToolset:
+        case elf_toolset_t::kUnknownToolset:
+            m_file->setELFVariant(ELFVariant_t::eGHSVariant);
             break;
-        case kGCCToolset:
-            m_file->setELFVariant(eGCCVariant);
+        case elf_toolset_t::kGCCToolset:
+            m_file->setELFVariant(ELFVariant_t::eGCCVariant);
             break;
-        case kADSToolset:
-            m_file->setELFVariant(eARMVariant);
+        case elf_toolset_t::kADSToolset:
+            m_file->setELFVariant(ELFVariant_t::eARMVariant);
             break;
     }
 }
@@ -124,44 +124,41 @@ elf_toolset_t ELFSourceFile::readToolsetOption()
     do
     {
         const OptionContext *options = getOptions();
-        if (!options || !options->hasOption(kToolsetOptionName))
+        if (options && options->hasOption(kToolsetOptionName))
         {
-            break;
-        }
+            const Value* value = options->getOption(kToolsetOptionName);
+            const StringValue* stringValue = dynamic_cast<const StringValue*>(value);
+            if (!stringValue)
+            {
+                // Not a string value, warn the user.
+                Log::log(Logger::log_level_t::kWarning, "invalid type for 'toolset' option\n");
+                break;
+            }
 
-        const Value *value = options->getOption(kToolsetOptionName);
-        const StringValue *stringValue = dynamic_cast<const StringValue *>(value);
-        if (!stringValue)
-        {
-            // Not a string value, warn the user.
-            Log::log(Logger::kWarning, "invalid type for 'toolset' option\n");
-            break;
-        }
+            std::string toolsetName = *stringValue;
 
-        std::string toolsetName = *stringValue;
+            // convert option value to uppercase
+            std::transform<std::string::const_iterator, std::string::iterator, int (*)(int)>(
+                toolsetName.begin(), toolsetName.end(), toolsetName.begin(), toupper);
 
-        // convert option value to uppercase
-        std::transform<std::string::const_iterator, std::string::iterator, int (*)(int)>(
-            toolsetName.begin(), toolsetName.end(), toolsetName.begin(), toupper);
-
-        if (toolsetName == kGHSToolsetName)
-        {
-            return kGHSToolset;
+            if (toolsetName == kGHSToolsetName)
+            {
+                return elf_toolset_t::kGHSToolset;
+            }
+            else if (toolsetName == kGCCToolsetName || toolsetName == kGNUToolsetName)
+            {
+                return elf_toolset_t::kGCCToolset;
+            }
+            else if (toolsetName == kADSToolsetName)
+            {
+                return elf_toolset_t::kADSToolset;
+            }
         }
-        else if (toolsetName == kGCCToolsetName || toolsetName == kGNUToolsetName)
-        {
-            return kGCCToolset;
-        }
-        else if (toolsetName == kADSToolsetName)
-        {
-            return kADSToolset;
-        }
-
         // Unrecognized option value, log a warning.
-        Log::log(Logger::kWarning, "unrecognized value for 'toolset' option\n");
+        Log::log(Logger::log_level_t::kWarning, "unrecognized value for 'toolset' option\n");
     } while (0);
 
-    return kUnknownToolset;
+    return elf_toolset_t::kUnknownToolset;
 }
 
 //! It is up to the caller to convert from kSecinfoDefault to the actual default
@@ -171,48 +168,46 @@ secinfo_clear_t ELFSourceFile::readSecinfoClearOption()
     do
     {
         const OptionContext *options = getOptions();
-        if (!options || !options->hasOption(kSecinfoClearOptionName))
+        if (options && options->hasOption(kSecinfoClearOptionName))
         {
-            break;
-        }
 
-        const Value *value = options->getOption(kSecinfoClearOptionName);
-        const StringValue *stringValue = dynamic_cast<const StringValue *>(value);
-        if (!stringValue)
-        {
-            // Not a string value, warn the user.
-            Log::log(Logger::kWarning, "invalid type for 'secinfoClear' option\n");
-            break;
-        }
+            const Value* value = options->getOption(kSecinfoClearOptionName);
+            const StringValue* stringValue = dynamic_cast<const StringValue*>(value);
+            if (!stringValue)
+            {
+                // Not a string value, warn the user.
+                Log::log(Logger::log_level_t::kWarning, "invalid type for 'secinfoClear' option\n");
+                break;
+            }
 
-        std::string secinfoOption = *stringValue;
+            std::string secinfoOption = *stringValue;
 
-        // convert option value to uppercase
-        std::transform<std::string::const_iterator, std::string::iterator, int (*)(int)>(
-            secinfoOption.begin(), secinfoOption.end(), secinfoOption.begin(), toupper);
+            // convert option value to uppercase
+            std::transform<std::string::const_iterator, std::string::iterator, int (*)(int)>(
+                secinfoOption.begin(), secinfoOption.end(), secinfoOption.begin(), toupper);
 
-        if (secinfoOption == kSecinfoDefaultName)
-        {
-            return kSecinfoDefault;
+            if (secinfoOption == kSecinfoDefaultName)
+            {
+                return secinfo_clear_t::kSecinfoDefault;
+            }
+            else if (secinfoOption == kSecinfoIgnoreName)
+            {
+                return secinfo_clear_t::kSecinfoIgnore;
+            }
+            else if (secinfoOption == kSecinfoROMName)
+            {
+                return secinfo_clear_t::kSecinfoROMClear;
+            }
+            else if (secinfoOption == kSecinfoCName)
+            {
+                return secinfo_clear_t::kSecinfoCStartupClear;
+            }
         }
-        else if (secinfoOption == kSecinfoIgnoreName)
-        {
-            return kSecinfoIgnore;
-        }
-        else if (secinfoOption == kSecinfoROMName)
-        {
-            return kSecinfoROMClear;
-        }
-        else if (secinfoOption == kSecinfoCName)
-        {
-            return kSecinfoCStartupClear;
-        }
-
         // Unrecognized option value, log a warning.
-        Log::log(Logger::kWarning, "unrecognized value for 'secinfoClear' option\n");
+        Log::log(Logger::log_level_t::kWarning, "unrecognized value for 'secinfoClear' option\n");
     } while (0);
 
-    return kSecinfoDefault;
+    return secinfo_clear_t::kSecinfoDefault;
 }
 
 //! To create a data source for all sections of the ELF file, a WildcardMatcher
@@ -231,19 +226,19 @@ DataSource *ELFSourceFile::createDataSource(const std::vector<uint32_t> &baseAdd
 
     if (match)
     {
-        Log::log(Logger::kDebug2, "filtering sections of file that match base addresses: 0x%08X\n", baseAddresses[0]);
+        Log::log(Logger::log_level_t::kDebug2, "filtering sections of file that match base addresses: 0x%08X\n", baseAddresses[0]);
         for (unsigned i = 1; i < baseAddresses.size(); i++)
         {
-            Log::log(Logger::kDebug2, "                                                      0x%08X\n",
+            Log::log(Logger::log_level_t::kDebug2, "                                                      0x%08X\n",
                      baseAddresses[i]);
         }
     }
     else
     {
-        Log::log(Logger::kDebug2, "filtering sections of file that exclude base addresses: 0x%08X\n", baseAddresses[0]);
+        Log::log(Logger::log_level_t::kDebug2, "filtering sections of file that exclude base addresses: 0x%08X\n", baseAddresses[0]);
         for (unsigned i = 1; i < baseAddresses.size(); i++)
         {
-            Log::log(Logger::kDebug2, "                                                      0x%08X\n",
+            Log::log(Logger::log_level_t::kDebug2, "                                                      0x%08X\n",
                      baseAddresses[i]);
         }
     }
@@ -273,18 +268,18 @@ DataSource *ELFSourceFile::createDataSource(const std::vector<uint32_t> &baseAdd
         // If we are matching we will only include the section that matches the baseAddress
         if ((!match && !contains) || (match && contains))
         {
-            Log::log(Logger::kDebug2, "creating segment for section %s with base address = 0x%08X\n", name.c_str(),
+            Log::log(Logger::log_level_t::kDebug2, "creating segment for section %s with base address = 0x%08X\n", name.c_str(),
                      header.sh_addr);
             source->addSection(index);
         }
         else
         {
-            Log::log(Logger::kDebug2, "section %s with base address of 0x%08X is excluded\n", name.c_str(),
+            Log::log(Logger::log_level_t::kDebug2, "section %s with base address of 0x%08X is excluded\n", name.c_str(),
                      header.sh_addr);
         }
     }
 
-    Log::log(Logger::kDebug2, "\n");
+    Log::log(Logger::log_level_t::kDebug2, "\n");
 
     return source;
 }
@@ -295,7 +290,7 @@ DataSource *ELFSourceFile::createDataSource(StringMatcher &matcher)
     ELFDataSource *source = new ELFDataSource(m_file);
     source->setSecinfoOption(m_secinfoOption);
 
-    Log::log(Logger::kDebug2, "filtering sections of file: %s\n", getPath().c_str());
+    Log::log(Logger::log_level_t::kDebug2, "filtering sections of file: %s\n", getPath().c_str());
 
     // We start at section 1 to skip the null section that is always first.
     unsigned index = 1;
@@ -318,12 +313,12 @@ DataSource *ELFSourceFile::createDataSource(StringMatcher &matcher)
 
         if (matcher.match(name))
         {
-            Log::log(Logger::kDebug2, "creating segment for section %s\n", name.c_str());
+            Log::log(Logger::log_level_t::kDebug2, "creating segment for section %s\n", name.c_str());
             source->addSection(index);
         }
         else
         {
-            Log::log(Logger::kDebug2, "section %s did not match\n", name.c_str());
+            Log::log(Logger::log_level_t::kDebug2, "section %s did not match\n", name.c_str());
         }
     }
 
@@ -352,11 +347,11 @@ uint32_t ELFSourceFile::getEntryPointAddress()
     if (symbolIndex != 0)
     {
         ARMSymbolType_t symbolType = m_file->getTypeOfSymbolAtIndex(symbolIndex);
-        bool entryPointIsThumb = (symbolType == eThumbSymbol);
+        bool entryPointIsThumb = (symbolType == ARMSymbolType_t::eThumbSymbol);
         const Elf32_Sym &symbol = m_file->getSymbolAtIndex(symbolIndex);
         std::string symbolName = m_file->getSymbolName(symbol);
 
-        Log::log(Logger::kDebug2, "Entry point is %s@0x%08x (%s)\n", symbolName.c_str(), symbol.st_value,
+        Log::log(Logger::log_level_t::kDebug2, "Entry point is %s@0x%08x (%s)\n", symbolName.c_str(), symbol.st_value,
                  entryPointIsThumb ? "Thumb" : "ARM");
 
         // set entry point, setting the low bit if it is thumb mode
@@ -403,7 +398,7 @@ DataTarget *ELFSourceFile::createDataTargetForSymbol(const std::string &symbol)
         if (symbolName == symbol)
         {
             ARMSymbolType_t symbolType = m_file->getTypeOfSymbolAtIndex(i);
-            bool symbolIsThumb = (symbolType == eThumbSymbol);
+            bool symbolIsThumb = (symbolType == ARMSymbolType_t::eThumbSymbol);
 
             uint32_t beginAddress = symbolHeader.st_value + (symbolIsThumb ? 1 : 0);
             uint32_t endAddress = beginAddress + symbolHeader.st_size;
@@ -437,7 +432,7 @@ uint32_t ELFSourceFile::getSymbolValue(const std::string &name)
             if (ELF32_ST_TYPE(symbolHeader.st_info) == STT_FUNC)
             {
                 ARMSymbolType_t symbolType = m_file->getTypeOfSymbolAtIndex(i);
-                bool symbolIsThumb = (symbolType == eThumbSymbol);
+                bool symbolIsThumb = (symbolType == ARMSymbolType_t::eThumbSymbol);
                 return symbolHeader.st_value + (symbolIsThumb ? 1 : 0);
             }
             else
@@ -534,21 +529,21 @@ void ELFSourceFile::ELFDataSource::addSection(unsigned sectionIndex)
         // If set to ignore, treat like a normal ELF file and always add. If set to
         // ROM, then only clear if the section is listed in .secinfo. Otherwise if set
         // to C startup, then let the C startup do all clearing.
-        if (m_elf->ELFVariant() == eGHSVariant)
+        if (m_elf->ELFVariant() == ELFVariant_t::eGHSVariant)
         {
             GHSSecInfo secinfo(m_elf);
 
             // If there isn't a .secinfo section present then use the normal ELF rules
             // and always add NOBITS sections.
-            if (secinfo.hasSecinfo() && m_secinfoOption != kSecinfoIgnore)
+            if (secinfo.hasSecinfo() && m_secinfoOption != secinfo_clear_t::kSecinfoIgnore)
             {
                 switch (m_secinfoOption)
                 {
-                    case kSecinfoROMClear:
+                    case secinfo_clear_t::kSecinfoROMClear:
                         addNobits = secinfo.isSectionFilled(section);
                         break;
 
-                    case kSecinfoCStartupClear:
+                    case secinfo_clear_t::kSecinfoCStartupClear:
                         addNobits = false;
                         break;
 
@@ -566,7 +561,7 @@ void ELFSourceFile::ELFDataSource::addSection(unsigned sectionIndex)
         else
         {
             std::string name = m_elf->getSectionNameAtIndex(section.sh_name);
-            Log::log(Logger::kDebug2, "..section %s is not filled\n", name.c_str());
+            Log::log(Logger::log_level_t::kDebug2, "..section %s is not filled\n", name.c_str());
         }
     }
 

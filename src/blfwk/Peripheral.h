@@ -48,13 +48,14 @@ namespace blfwk
 class Peripheral
 {
 public:
-    enum _host_peripheral_types
+    enum class _host_peripheral_types
     {
         kHostPeripheralType_None,
         kHostPeripheralType_UART,
         kHostPeripheralType_BUSPAL_UART,
         kHostPeripheralType_USB_HID,
-        kHostPeripheralType_SIM
+        kHostPeripheralType_SIM,
+        kHostPeripheralType_D2XX
     };
 
     struct PeripheralConfigData
@@ -68,6 +69,23 @@ public:
         std::string usbHidSerialNumber;
         bool ping;
         BusPal::BusPalConfigData busPalConfig;
+        std::string deviceName;
+#if defined(__cplusplus)
+        PeripheralConfigData()
+            : peripheralType(_host_peripheral_types::kHostPeripheralType_None)
+            , comPortName("")
+            , comPortSpeed(0)
+            , packetTimeoutMs(0)
+            , usbHidVid(0)
+            , usbHidPid(0)
+            , usbHidSerialNumber("")
+            , ping(false)
+            , busPalConfig(BusPal::bus_pal_function_t::kBusPalFunction_None)
+            , deviceName("")
+        {
+        }
+#endif
+
     };
 
     virtual ~Peripheral(){};

@@ -43,11 +43,13 @@ enum
 
 using namespace blfwk;
 
-SRecordSourceFile::SRecordSourceFile(const std::string &path)
-    : SourceFile(path, kSRecordSourceFile)
+SRecordSourceFile::SRecordSourceFile(const std::string& path)
+    : SourceFile(path, source_file_t::kSRecordSourceFile)
     , m_image(0)
     , m_hasEntryRecord(false)
+    , m_file(NULL)
 {
+    memset(&m_entryRecord, 0, sizeof(m_entryRecord));
 }
 
 bool SRecordSourceFile::isSRecordFile(std::istream &stream)
@@ -110,7 +112,7 @@ uint32_t SRecordSourceFile::getEntryPointAddress()
     if (m_hasEntryRecord)
     {
         // the address in the record is the entry point
-        Log::log(Logger::kDebug2, "entry point address is 0x%08x\n", m_entryRecord.m_address);
+        Log::log(Logger::log_level_t::kDebug2, "entry point address is 0x%08x\n", m_entryRecord.m_address);
         return m_entryRecord.m_address;
     }
 
@@ -145,7 +147,7 @@ void SRecordSourceFile::buildMemoryImage()
     unsigned startAddress = 0;
     unsigned nextAddress = 0;
     unsigned dataLength = 0;
-
+    if (m_file == NULL) return;
     // process SRecords
     StSRecordFile::const_iterator it = m_file->getBegin();
     for (; it != m_file->getEnd(); it++)

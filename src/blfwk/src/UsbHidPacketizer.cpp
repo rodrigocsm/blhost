@@ -48,6 +48,7 @@ UsbHidPacketizer::UsbHidPacketizer(UsbHidPeripheral *peripheral, uint32_t packet
     : Packetizer(peripheral, packetTimeoutMs)
 {
     m_continuousReadCount = 0;
+    memset(&m_abortReport, 0, sizeof(m_abortReport));
 }
 
 // See usb_hid_packetizer.h for documentation of this method.
@@ -69,10 +70,10 @@ status_t UsbHidPacketizer::writePacket(const uint8_t *packet, uint32_t byteCount
     uint8_t reportID;
     switch (packetType)
     {
-        case kPacketType_Command:
+        case packet_type_t::kPacketType_Command:
             reportID = kBootloaderReportID_CommandOut;
             break;
-        case kPacketType_Data:
+        case packet_type_t::kPacketType_Data:
             reportID = kBootloaderReportID_DataOut;
             break;
         default:
@@ -113,6 +114,8 @@ status_t UsbHidPacketizer::readPacket(uint8_t **packet, uint32_t *packetLength, 
     assert(m_peripheral);
     assert(packet);
     assert(packetLength);
+    if (!packet || !packetLength)
+        return kStatus_Fail;
     *packet = NULL;
     *packetLength = 0;
 
@@ -120,10 +123,10 @@ status_t UsbHidPacketizer::readPacket(uint8_t **packet, uint32_t *packetLength, 
     uint8_t reportID;
     switch (packetType)
     {
-        case kPacketType_Command:
+    case packet_type_t::kPacketType_Command:
             reportID = kBootloaderReportID_CommandIn;
             break;
-        case kPacketType_Data:
+        case packet_type_t::kPacketType_Data:
             reportID = kBootloaderReportID_DataIn;
             break;
         default:
@@ -206,7 +209,7 @@ void UsbHidPacketizer::flushInput()
 void UsbHidPacketizer::abortPacket()
 {
     // Abort data phase by writing a zero-length command packet.
-    writePacket(NULL, 0, kPacketType_Command);
+    writePacket(NULL, 0, packet_type_t::kPacketType_Command);
     flushInput();
 }
 

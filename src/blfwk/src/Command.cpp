@@ -280,11 +280,11 @@ std::string Command::getResponse() const
 {
     Json::Value root;
     root["command"] = getName();
-    root["status"] = Json::Value(Json::objectValue);
+    root["status"] = Json::Value(Json::ValueType::objectValue);
     root["status"]["value"] = static_cast<int32_t>(m_responseValues.at(0));
     root["status"]["description"] = format_string("%d (0x%X) %s", m_responseValues.at(0), m_responseValues.at(0),
                                                   getStatusMessage(m_responseValues.at(0)).c_str());
-    root["response"] = Json::Value(Json::arrayValue);
+    root["response"] = Json::Value(Json::ValueType::arrayValue);
     for (int i = 1; i < (int)m_responseValues.size(); ++i)
     {
         root["response"].append(Json::Value(m_responseValues.at(i)));
@@ -513,7 +513,7 @@ uint8_t *blfwk::DataPacket::sendTo(Packetizer &device, uint32_t *bytesWritten, P
         uint32_t count = m_dataProducer->getData(m_packet, sizeof(m_packet));
         if (count)
         {
-            status_t status = device.writePacket((const uint8_t *)m_packet, count, kPacketType_Data);
+            status_t status = device.writePacket((const uint8_t *)m_packet, count, _packet_type::kPacketType_Data);
             if (status != kStatus_Success)
             {
                 Log::error("Data phase write aborted by status 0x%x %s\n", status,
@@ -533,7 +533,7 @@ uint8_t *blfwk::DataPacket::sendTo(Packetizer &device, uint32_t *bytesWritten, P
                 progress->progressCallback(*bytesWritten * 100 / m_dataProducer->getDataSize());
                 if (progress->abortPhase())
                 {
-                    device.writePacket((const uint8_t *)&m_packet, 0, kPacketType_Data);
+                    device.writePacket((const uint8_t *)&m_packet, 0, _packet_type::kPacketType_Data);
                     break;
                 }
             }
@@ -549,7 +549,7 @@ uint8_t *blfwk::DataPacket::sendTo(Packetizer &device, uint32_t *bytesWritten, P
     // Read final command status
     uint8_t *responsePacket;
     uint32_t responseLength;
-    if (device.readPacket(&responsePacket, &responseLength, kPacketType_Command) != kStatus_Success)
+    if (device.readPacket(&responsePacket, &responseLength, _packet_type::kPacketType_Command) != kStatus_Success)
     {
         return NULL;
     }
@@ -575,7 +575,7 @@ uint8_t *blfwk::DataPacket::receiveFrom(Packetizer &device, uint32_t *byteCount,
         // Pump the simulator command state machine, if it is enabled.
         device.pumpSimulator();
 
-        status = device.readPacket(&dataPacket, &length, kPacketType_Data);
+        status = device.readPacket(&dataPacket, &length, _packet_type::kPacketType_Data);
 
         // Bail if there was an error reading the packet.
         if (status != kStatus_Success)
@@ -620,7 +620,7 @@ uint8_t *blfwk::DataPacket::receiveFrom(Packetizer &device, uint32_t *byteCount,
     // Read the final generic response packet.
     uint8_t *responsePacket;
     uint32_t responseLength;
-    if (device.readPacket(&responsePacket, &responseLength, kPacketType_Command) != kStatus_Success)
+    if (device.readPacket(&responsePacket, &responseLength, _packet_type::kPacketType_Command) != kStatus_Success)
     {
         return NULL;
     }
@@ -633,13 +633,13 @@ const uint8_t *blfwk::CommandPacket::sendCommandGetResponse(Packetizer &device)
     uint8_t *responsePacket = NULL;
     uint32_t responseLength = 0;
 
-    status_t status = device.writePacket(getData(), getSize(), kPacketType_Command);
+    status_t status = device.writePacket(getData(), getSize(), _packet_type::kPacketType_Command);
     if (status != kStatus_Success)
     {
         Log::error("sendCommandGetResponse.writePacket error %d.\n", status);
         return NULL;
     }
-    status = device.readPacket(&responsePacket, &responseLength, kPacketType_Command);
+    status = device.readPacket(&responsePacket, &responseLength, _packet_type::kPacketType_Command);
     if (status == kStatus_Success)
     {
         return responsePacket;
@@ -2071,11 +2071,11 @@ bool ConfigureSpi::init()
                 {
                     if (!strcmp(getArg(4).c_str(), "lsb"))
                     {
-                        spiDirection = BusPal::kSpiLsbFirst;
+                        spiDirection = BusPal::spi_shift_direction_t::kSpiLsbFirst;
                     }
                     else if (!strcmp(getArg(4).c_str(), "msb"))
                     {
-                        spiDirection = BusPal::kSpiMsbFirst;
+                        spiDirection = BusPal::spi_shift_direction_t::kSpiMsbFirst;
                     }
                 }
             }
@@ -2088,8 +2088,8 @@ bool ConfigureSpi::init()
 // See host_command.h for documentation of this method.
 void ConfigureSpi::sendTo(Packetizer &device)
 {
-    blfwk::CommandPacket cmdPacket(kCommandTag_ConfigureSpi, kCommandFlag_None, spiSpeedKHz, spiPolarity, spiPhase,
-                                   spiDirection);
+    blfwk::CommandPacket cmdPacket(kCommandTag_ConfigureSpi, kCommandFlag_None, spiSpeedKHz, static_cast<uint32_t>(spiPolarity), static_cast<uint32_t>(spiPhase),
+        static_cast<uint32_t>(spiDirection));
     processResponse(cmdPacket.sendCommandGetResponse(device));
 }
 

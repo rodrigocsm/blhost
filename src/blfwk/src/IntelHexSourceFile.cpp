@@ -45,10 +45,12 @@ enum
 using namespace blfwk;
 
 IntelHexSourceFile::IntelHexSourceFile(const std::string &path)
-    : SourceFile(path, kIntelHexSourceFile)
+    : SourceFile(path, source_file_t::kIntelHexSourceFile)
     , m_image(0)
-    , m_hasEntryRecord(false)
+    , m_hasEntryRecord(false)   
+    , m_file(NULL)
 {
+    memset(&m_entryRecord, 0, sizeof(m_entryRecord));
 }
 
 bool IntelHexSourceFile::isIntelHexFile(std::istream &stream)
@@ -111,7 +113,7 @@ uint32_t IntelHexSourceFile::getEntryPointAddress()
         // the address in the record is the entry point
         uint32_t address = (m_entryRecord.m_data[0] << 24) | (m_entryRecord.m_data[1] << 16) |
                            (m_entryRecord.m_data[2] << 8) | (m_entryRecord.m_data[3]);
-        Log::log(Logger::kDebug2, "entry point address is 0x%08x\n", address);
+        Log::log(Logger::log_level_t::kDebug2, "entry point address is 0x%08x\n", address);
         return address;
     }
 
@@ -154,7 +156,8 @@ void IntelHexSourceFile::buildMemoryImage()
     unsigned startAddress = 0;
     unsigned nextAddress = 0;
     unsigned dataLength = 0;
-
+    if (!m_file)
+        return;
     // process IntelHexs
     StIntelHexFile::const_iterator it = m_file->getBegin();
     for (; it != m_file->getEnd(); it++)

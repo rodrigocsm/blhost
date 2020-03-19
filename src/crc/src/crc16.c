@@ -99,16 +99,17 @@ void crc16_finalize(crc16_data_t *crc16Config, uint16_t *hash)
 void crc16_init(crc16_data_t *crc16Config)
 {
     assert(crc16Config);
-
+    if(crc16Config)
     // initialize running crc and byte count
-    crc16Config->currentCrc = 0;
+        crc16Config->currentCrc = 0;
 }
 
 void crc16_update(crc16_data_t *crc16Config, const uint8_t *src, uint32_t lengthInBytes)
 {
     assert(crc16Config);
     assert(src);
-
+    if (!crc16Config || !src)
+        return;
     uint32_t crc = crc16Config->currentCrc;
 
     uint32_t j;
@@ -135,7 +136,8 @@ void crc16_finalize(crc16_data_t *crc16Config, uint16_t *hash)
 {
     assert(crc16Config);
     assert(hash);
-
+    if (!crc16Config || !hash)
+        return;
     *hash = crc16Config->currentCrc;
 }
 #endif

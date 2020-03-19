@@ -408,7 +408,7 @@ public:
 
     //! Error return values for operator()
     //!
-    enum OptRC
+    enum class OptRC
     {
         ENDOPTS = 0,
         BADCHAR = -1,

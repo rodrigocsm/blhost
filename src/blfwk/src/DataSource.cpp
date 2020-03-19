@@ -263,7 +263,7 @@ MemoryImageDataSource::FillSegment::FillSegment(MemoryImageDataSource &source, S
     , m_image(image)
     , m_index(index)
 {
-    SizedIntegerValue zero(0, kWordSize);
+    SizedIntegerValue zero(0, int_size_t::kWordSize);
     setPattern(zero);
 }
 

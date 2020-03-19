@@ -72,7 +72,7 @@ class Logger
 {
 public:
     //! \brief Logging levels.
-    enum log_level_t
+    enum class log_level_t
     {
         kUrgent = 0,     //!< The lowest level, for messages that must always be logged.
         kJson,           //!< For machine language output only.
@@ -89,8 +89,8 @@ public:
 public:
     //! \brief Default constructor.
     Logger()
-        : m_filter(kInfo)
-        , m_level(kInfo)
+        : m_filter(Logger::log_level_t::kInfo)
+        , m_level(Logger::log_level_t::kInfo)
     {
     }
 
@@ -221,10 +221,11 @@ public:
         //! as managed by the Log class, and sets the new level to \a level.
         SetOutputLevel(Logger::log_level_t level)
             : m_logger(Log::getLogger())
-            , m_saved(Logger::kInfo)
+            , m_saved(Logger::log_level_t::kInfo)
         {
             assert(m_logger);
-            m_saved = m_logger->getOutputLevel();
+            if(m_logger)
+                m_saved = m_logger->getOutputLevel();
             m_logger->setOutputLevel(level);
         }
 

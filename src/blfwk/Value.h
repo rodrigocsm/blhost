@@ -97,22 +97,22 @@ class SizedIntegerValue : public IntegerValue
 public:
     SizedIntegerValue()
         : IntegerValue()
-        , m_size(kWordSize)
+        , m_size(_int_size_t::kWordSize)
     {
     }
-    SizedIntegerValue(uint32_t value, int_size_t size = kWordSize)
+    SizedIntegerValue(uint32_t value, int_size_t size = _int_size_t::kWordSize)
         : IntegerValue(value)
         , m_size(size)
     {
     }
     SizedIntegerValue(uint16_t value)
         : IntegerValue(value)
-        , m_size(kHalfWordSize)
+        , m_size(_int_size_t::kHalfWordSize)
     {
     }
     SizedIntegerValue(uint8_t value)
         : IntegerValue(value)
-        , m_size(kByteSize)
+        , m_size(_int_size_t::kByteSize)
     {
     }
     SizedIntegerValue(const SizedIntegerValue &other)
@@ -135,19 +135,19 @@ public:
     SizedIntegerValue &operator=(uint8_t value)
     {
         m_value = value;
-        m_size = kByteSize;
+        m_size = _int_size_t::kByteSize;
         return *this;
     }
     SizedIntegerValue &operator=(uint16_t value)
     {
         m_value = value;
-        m_size = kHalfWordSize;
+        m_size = _int_size_t::kHalfWordSize;
         return *this;
     }
     SizedIntegerValue &operator=(uint32_t value)
     {
         m_value = value;
-        m_size = kWordSize;
+        m_size = _int_size_t::kWordSize;
         return *this;
     }
     //@}

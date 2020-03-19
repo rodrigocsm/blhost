@@ -82,7 +82,7 @@ bool GHSSecInfo::isSectionFilled(uint32_t addr, uint32_t length)
             // it is an error if the address matches but the length does not
             if (length != numBytesToClear)
             {
-                Log::log(Logger::kWarning, "ELF Error: Size mismatch @ sect=%u, .secinfo=%u at addr 0x%08X\n", length,
+                Log::log(Logger::log_level_t::kWarning, "ELF Error: Size mismatch @ sect=%u, .secinfo=%u at addr 0x%08X\n", length,
                          numBytesToClear, addr);
             }
             return true;

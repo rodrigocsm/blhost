@@ -91,7 +91,7 @@ typedef struct _peripheral_byte_inteface
 } peripheral_byte_inteface_t;
 
 //! @brief Packet types.
-typedef enum _packet_type
+typedef enum class _packet_type
 {
     kPacketType_Command, //!< Send or expect a command packet
     kPacketType_Data     //!< Send or expect a data packet

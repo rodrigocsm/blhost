@@ -40,7 +40,7 @@
 namespace blfwk
 {
 //! Set of supported compiler toolsets.
-enum elf_toolset_t
+enum class elf_toolset_t
 {
     kUnknownToolset, //!< Unknown.
     kGHSToolset,     //!< Green Hills Software MULTI
@@ -49,7 +49,7 @@ enum elf_toolset_t
 };
 
 //! Options for handling the .secinfo section in GHS-produced ELF files.
-enum secinfo_clear_t
+enum class secinfo_clear_t
 {
     // Default value for the .secinfo action.
     kSecinfoDefault,
@@ -221,6 +221,7 @@ protected:
         ELFDataSource(StELFFile *elf)
             : DataSource()
             , m_elf(elf)
+            , m_secinfoOption(secinfo_clear_t::kSecinfoDefault)
         {
         }
 

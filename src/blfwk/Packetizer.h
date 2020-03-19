@@ -65,6 +65,7 @@ public:
         , m_version()
         , m_options(0)
         , m_isAbortEnabled(false)
+        , m_startTime(0)
     {
     }
 

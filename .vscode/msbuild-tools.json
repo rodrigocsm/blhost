@@ -1,0 +1,29 @@
+{
+    "solution": "${workspaceRoot}/validation/blhost/blhost.sln",
+    "variables": {
+        "MSBUILD": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe",
+        "DEVENV": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/IDE/vsn.exe"
+    },
+    "buildConfigurations": [
+        "Debug",
+        "Release"
+    ],
+    "preBuildTasks": [{
+        "name": "Print a message",
+        "program": "cmd",
+        "args": ["/c", "echo [pre-build task]: MESSAGE"],
+        "cwd": "${workspaceRoot}"
+    }],
+    "postBuildTasks": [{
+        "name": "Print another message",
+        "program": "cmd",
+        "args": ["/c", "echo [post-build task]: ANOTHER MESSAGE"],
+        "cwd": "${workspaceRoot}"
+    }],
+    "debugConfigurations": [{
+        "name": "test",
+        "cwd": "${workspaceRoot}",
+        "program": "${workspaceRoot}/validation/blhost/${buildConfig}/blhost.exe",
+        "args": []
+    }]
+}

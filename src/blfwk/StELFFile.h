@@ -39,7 +39,7 @@
 #include "blfwk/ELF.h"
 
 //! Variations of the ARM ELF format.
-typedef enum
+typedef enum class _ELFVariant_t
 {
     eARMVariant = 1, //!< Standard ARM ELF specification.
     eGHSVariant,     //!< Green Hills Software variant.
@@ -47,7 +47,7 @@ typedef enum
 } ELFVariant_t;
 
 //! Possible ARM ELF symbol types.
-typedef enum
+typedef enum class _ARMSymbolType_t
 {
     eUnknownSymbol,
     eARMSymbol,

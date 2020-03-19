@@ -129,18 +129,18 @@ void Log::urgent(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kUrgent, fmt, args);
+        s_logger->log(Logger::log_level_t::kUrgent, fmt, args);
         va_end(args);
     }
 }
 
 void Log::json(const char *fmt, ...)
 {
-    if (s_logger && s_logger->getFilterLevel() == Logger::kJson)
+    if (s_logger && s_logger->getFilterLevel() == Logger::log_level_t::kJson)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kJson, fmt, args);
+        s_logger->log(Logger::log_level_t::kJson, fmt, args);
         va_end(args);
     }
 }
@@ -151,7 +151,7 @@ void Log::error(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kError, fmt, args);
+        s_logger->log(Logger::log_level_t::kError, fmt, args);
         va_end(args);
     }
 }
@@ -162,7 +162,7 @@ void Log::warning(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kWarning, fmt, args);
+        s_logger->log(Logger::log_level_t::kWarning, fmt, args);
         va_end(args);
     }
 }
@@ -173,7 +173,7 @@ void Log::info(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kInfo, fmt, args);
+        s_logger->log(Logger::log_level_t::kInfo, fmt, args);
         va_end(args);
     }
 }
@@ -184,7 +184,7 @@ void Log::info2(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kInfo2, fmt, args);
+        s_logger->log(Logger::log_level_t::kInfo2, fmt, args);
         va_end(args);
     }
 }
@@ -195,7 +195,7 @@ void Log::debug(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kDebug, fmt, args);
+        s_logger->log(Logger::log_level_t::kDebug, fmt, args);
         va_end(args);
     }
 }
@@ -206,7 +206,7 @@ void Log::debug2(const char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        s_logger->log(Logger::kDebug2, fmt, args);
+        s_logger->log(Logger::log_level_t::kDebug2, fmt, args);
         va_end(args);
     }
 }

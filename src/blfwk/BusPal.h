@@ -59,7 +59,7 @@ public:
     };
 
     //! @brief BusPal Transports.
-    enum bus_pal_function_t
+    enum class bus_pal_function_t
     {
         kBusPalFunction_None,
         kBusPalFunction_SPI,
@@ -71,14 +71,14 @@ public:
     };
 
     //! @brief SPI clock polarity configuration.
-    enum spi_clock_polarity_t
+    enum class spi_clock_polarity_t
     {
         kSpiClockPolarity_ActiveHigh = 0, //!< Active-high SPI clock (idles low).
         kSpiClockPolarity_ActiveLow = 1   //!< Active-low SPI clock (idles high).
     };
 
     //! @brief SPI clock phase configuration.
-    enum spi_clock_phase_t
+    enum class spi_clock_phase_t
     {
         kSpiClockPhase_FirstEdge =
             0, //!< First edge on SPSCK occurs at the middle of the first cycle of a data transfer.
@@ -87,7 +87,7 @@ public:
     };
 
     //! @brief SPI data shifter direction options.
-    enum spi_shift_direction_t
+    enum class spi_shift_direction_t
     {
         kSpiMsbFirst = 0, //!< Data transfers start with most significant bit.
         kSpiLsbFirst = 1  //!< Data transfers start with least significant bit.
@@ -116,13 +116,13 @@ public:
         uint8_t gpioMux;
         uint32_t fpgaClockMhz;
 
-        BusPalConfigData(bus_pal_function_t bus = BusPal::kBusPalFunction_None)
+        BusPalConfigData(bus_pal_function_t bus = bus_pal_function_t::kBusPalFunction_None)
             : function(bus)
         {
             spiSpeedKHz = 100;
-            spiPolarity = BusPal::kSpiClockPolarity_ActiveLow;
-            spiPhase = BusPal::kSpiClockPhase_SecondEdge;
-            spiDirection = BusPal::kSpiMsbFirst;
+            spiPolarity = spi_clock_polarity_t::kSpiClockPolarity_ActiveLow;
+            spiPhase = spi_clock_phase_t::kSpiClockPhase_SecondEdge;
+            spiDirection = spi_shift_direction_t::kSpiMsbFirst;
             i2cAddress = BusPal::kBusPalDefaultI2cSlaveAddress;
             i2cSpeedKHz = 100;
             canSpeed = 4; // 4: 1M
@@ -258,7 +258,7 @@ protected:
     void flushRX();
 
 protected:
-    enum bus_pal_mode_t
+    enum class bus_pal_mode_t
     {
         kBusPalModeBitBang,
         kBusPalModeSpi,

@@ -33,6 +33,7 @@
 
 #include "Packetizer.h"
 #include "UartPeripheral.h"
+#include "D2xxPeripheral.h"
 #include "bootloader_common.h"
 #include "packet/serial_packet.h"
 
@@ -52,6 +53,7 @@ class SerialPacketizer : public Packetizer
 public:
     //! @brief Constructor.
     SerialPacketizer(UartPeripheral *peripheral, uint32_t packetTimeoutMs);
+    SerialPacketizer(D2xxPeripheral* peripheral, uint32_t packetTimeoutMs);
 
     //! @brief Destructor.
     virtual ~SerialPacketizer();

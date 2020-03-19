@@ -64,7 +64,7 @@ static const char *k_optionsDefinition[] = { "?|help", "v|version", "p:port <nam
                                              "i2c,[<address>,<speed>] | gpio,config,<port>,<pin>,<muxVal> | "
                                              "gpio,set,<port>,<pin>,<level> | can,<speed>,<txid>,<rxid>",
                                              "u?usb [[<vid>,]<pid>]", "V|verbose", "d|debug", "j|json", "n|noping",
-                                             "t:timeout <ms>", NULL };
+                                             "t:timeout <ms>", "x:d2xx <name>[,<speed>]", NULL };
 
 //! @brief Usage text.
 const char k_optionUsage[] =
@@ -75,6 +75,9 @@ const char k_optionUsage[] =
                                and optionally baud rate\n\
                                  (default=COM1,57600)\n\
                                  If -b, then port is BusPal port\n\
+  -x/--d2xx <name>[,<speed>] Connect to target over UART. Specify the device description\n\
+                               and optionally baud rate\n\
+                                 (default="",57600)\n\
   -b/--buspal spi[,<speed>,<polarity>,<phase>,lsb|msb] |\n\
               i2c[,<address>,<speed>]\n\
               gpio,config,<port>,<pin>,<muxVal>\n\
@@ -228,14 +231,16 @@ public:
         , m_logger(NULL)
         , m_useUsb(false)
         , m_useUart(false)
+        , m_useD2xx(false)
         , m_usbVid(UsbHidPeripheral::kDefault_Vid)
         , m_usbPid(UsbHidPeripheral::kDefault_Pid)
         , m_packetTimeoutMs(5000)
         , m_ping(true)
+        , m_deviceName("")
     {
         // create logger instance
         m_logger = new StdoutLogger();
-        m_logger->setFilterLevel(Logger::kInfo);
+        m_logger->setFilterLevel(Logger::log_level_t::kInfo);
         Log::setLogger(m_logger);
 
 #if defined(WIN32)
@@ -273,12 +278,14 @@ protected:
     string_vector_t m_busPalConfig; //!< Bus pal peripheral-specific argument vector.
     bool m_useUsb;                  //!< Connect over USB HID.
     bool m_useUart;                 //!< Connect over UART.
+    bool m_useD2xx;                 //!< Connect over UART via D2xx Driver
     uint16_t m_usbVid;              //!< USB VID of the target HID device
     uint16_t m_usbPid;              //!< USB PID of the target HID device
     bool m_ping;                    //!< If true will not send the initial ping to a serial device
     uint32_t m_packetTimeoutMs;     //!< Packet timeout in milliseconds.
     ping_response_t m_pingResponse; //!< Response to initial ping
     StdoutLogger *m_logger;         //!< Singleton logger instance.
+    string m_deviceName;            //!< USB Device Description using D2XX Driver
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,9 +369,9 @@ int BlHost::processOptions()
 
             case 'p':
             {
-                if (m_useUsb)
+                if (m_useUsb || m_useD2xx)
                 {
-                    Log::error("Error: You cannot specify both -u and -p options.\n");
+                    Log::error("Error: You cannot specify -p and -u or -d options.\n");
                     options.usage(std::cout, usageTrailer);
                     printUsage();
                     return 0;
@@ -402,6 +409,13 @@ int BlHost::processOptions()
             }
             case 'b':
             {
+                if (m_useD2xx)
+                {
+                    Log::error("Error: option -b/--buspal do not support -x/--d2xx.\n");
+                    options.usage(std::cout, usageTrailer);
+                    printUsage();
+                    return 0;
+                }
                 if (optarg)
                 {
                     m_busPalConfig = utils::string_split(optarg, ',');
@@ -423,9 +437,9 @@ int BlHost::processOptions()
             }
             case 'u':
             {
-                if (m_useUart)
+                if (m_useUart || m_useD2xx)
                 {
-                    Log::error("Error: You cannot specify both -u and -p options.\n");
+                    Log::error("Error: You cannot specify -u and -p or -d options.\n");
                     options.usage(std::cout, usageTrailer);
                     printUsage();
                     return 0;
@@ -468,17 +482,64 @@ int BlHost::processOptions()
                 m_useUsb = true;
                 break;
             }
+            case 'x':
+            {
+                if (m_useUsb || m_useUart)
+                {
+                    Log::error("Error: You cannot specify -d and -u or -p options.\n");
+                    options.usage(std::cout, usageTrailer);
+                    printUsage();
+                    return 0;
+                }
+                if (m_useBusPal)
+                {
+                    Log::error("Error: option -b/--buspal do not support -x/--d2xx.\n");
+                    options.usage(std::cout, usageTrailer);
+                    printUsage();
+                    return 0;
+                }
+#if defined(WIN32)
+                if (optarg && (string(optarg)[0] == 'c' || string(optarg)[0] == 'C'))
+#else
+                if (optarg)
+#endif
+                {
+                    string_vector_t params = utils::string_split(optarg, ',');
+                    m_deviceName = params[0];
+                    if (params.size() == 2)
+                    {
+                        int speed = atoi(params[1].c_str());
+                        if (speed <= 0)
+                        {
+                            Log::error("Error: You must specify a valid baud rate with the -x/--d2xx option.\n");
+                            options.usage(std::cout, usageTrailer);
+                            printUsage();
+                            return 0;
+                        }
+                        m_comSpeed = speed;
+                    }
+                }
+                else
+                {
+                    Log::error("Error: You must specify the device description string with the -x/--d2xx option.\n");
+                    options.usage(std::cout, usageTrailer);
+                    printUsage();
+                    return 0;
+                }
+                m_useD2xx = true;
+                break;
+            }
 
             case 'V':
-                Log::getLogger()->setFilterLevel(Logger::kDebug);
+                Log::getLogger()->setFilterLevel(Logger::log_level_t::kDebug);
                 break;
 
             case 'd':
-                Log::getLogger()->setFilterLevel(Logger::kDebug2);
+                Log::getLogger()->setFilterLevel(Logger::log_level_t::kDebug2);
                 break;
 
             case 'j':
-                Log::getLogger()->setFilterLevel(Logger::kJson);
+                Log::getLogger()->setFilterLevel(Logger::log_level_t::kJson);
                 break;
 
             case 'n':
@@ -569,7 +630,7 @@ int BlHost::run()
 
         if (m_useUsb)
         {
-            config.peripheralType = Peripheral::kHostPeripheralType_USB_HID;
+            config.peripheralType = Peripheral::_host_peripheral_types::kHostPeripheralType_USB_HID;
             config.usbHidVid = m_usbVid;
             config.usbHidPid = m_usbPid;
             config.packetTimeoutMs = m_packetTimeoutMs;
@@ -598,15 +659,15 @@ int BlHost::run()
                 }
             }
         }
-        else
+        else if(m_useUart)
         {
-            config.peripheralType = Peripheral::kHostPeripheralType_UART;
+            config.peripheralType = Peripheral::_host_peripheral_types::kHostPeripheralType_UART;
             config.comPortName = m_comPort.c_str();
             config.comPortSpeed = m_comSpeed;
             config.packetTimeoutMs = m_packetTimeoutMs;
             if (m_useBusPal)
             {
-                config.peripheralType = Peripheral::kHostPeripheralType_BUSPAL_UART;
+                config.peripheralType = Peripheral::_host_peripheral_types::kHostPeripheralType_BUSPAL_UART;
                 if (!BusPal::parse(m_busPalConfig, config.busPalConfig))
                 {
                     std::string msg =
@@ -614,6 +675,13 @@ int BlHost::run()
                     throw std::runtime_error(msg);
                 }
             }
+        }
+        else if (m_useD2xx)
+        {
+            config.peripheralType = Peripheral::_host_peripheral_types::kHostPeripheralType_D2XX;
+            config.deviceName = m_deviceName.c_str();
+            config.comPortSpeed = m_comSpeed;
+            config.packetTimeoutMs = m_packetTimeoutMs;            
         }
 
         // Init the Bootloader object.

@@ -187,21 +187,21 @@ restart_loops:
             {
                 switch (filter.m_action)
                 {
-                    case ADDR_FILTER_NONE:
+                    case AddressFilterAction::ADDR_FILTER_NONE:
                         // Do nothing.
                         break;
 
-                    case ADDR_FILTER_ERROR:
+                    case AddressFilterAction::ADDR_FILTER_ERROR:
                         // throw error exception
                         throw address_filter_exception(true, m_name, filter);
                         break;
 
-                    case ADDR_FILTER_WARNING:
+                    case AddressFilterAction::ADDR_FILTER_WARNING:
                         // throw warning exception
                         throw address_filter_exception(false, m_name, filter);
                         break;
 
-                    case ADDR_FILTER_CROP:
+                    case AddressFilterAction::ADDR_FILTER_CROP:
                         // Delete the offending portion of the region and restart
                         // the iteration loops.
                         cropRegionToFilter(region, filter);

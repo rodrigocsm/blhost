@@ -102,7 +102,7 @@ void StELFFile::readFileHeaders()
             Elf32_Shdr sectionHeader;
             for (i = 0; i < m_header.e_shnum; ++i)
             {
-                m_stream.seekg(m_header.e_shoff + m_header.e_shentsize * i, std::ios::beg);
+                m_stream.seekg((std::streamoff)m_header.e_shoff + (std::streamoff)m_header.e_shentsize * (std::streamoff)i, std::ios::beg);
                 m_stream.read(reinterpret_cast<char *>(&sectionHeader), sizeof(sectionHeader));
                 if (m_stream.bad())
                 {
@@ -131,7 +131,7 @@ void StELFFile::readFileHeaders()
             Elf32_Phdr programHeader;
             for (i = 0; i < m_header.e_phnum; ++i)
             {
-                m_stream.seekg(m_header.e_phoff + m_header.e_phentsize * i, std::ios::beg);
+                m_stream.seekg((std::streamoff)m_header.e_phoff + (std::streamoff)m_header.e_phentsize * (std::streamoff)i, std::ios::beg);
                 m_stream.read(reinterpret_cast<char *>(&programHeader), sizeof(programHeader));
                 if (m_stream.bad())
                 {
@@ -465,13 +465,13 @@ unsigned StELFFile::getIndexOfSymbolAtAddress(uint32_t symbolAddress, bool stric
 
 ARMSymbolType_t StELFFile::getTypeOfSymbolAtIndex(unsigned symbolIndex)
 {
-    ARMSymbolType_t symType = eARMSymbol;
+    ARMSymbolType_t symType = ARMSymbolType_t::eARMSymbol;
     const Elf32_Sym &symbol = getSymbolAtIndex(symbolIndex);
 
-    if (m_elfVariant == eGHSVariant)
+    if (m_elfVariant == ELFVariant_t::eGHSVariant)
     {
         if (symbol.st_other & STO_THUMB)
-            symType = eThumbSymbol;
+            symType = ARMSymbolType_t::eThumbSymbol;
     }
     else
     {
@@ -495,16 +495,16 @@ ARMSymbolType_t StELFFile::getTypeOfSymbolAtIndex(unsigned symbolIndex)
         {
             const Elf32_Sym &mappingSym = getSymbolAtIndex(mappingSymIndex);
             std::string mappingSymName = getSymbolName(mappingSym);
-            ARMSymbolType_t nextSymType = eUnknownSymbol;
+            ARMSymbolType_t nextSymType = ARMSymbolType_t::eUnknownSymbol;
 
             if (mappingSymName == ARM_SEQUENCE_MAPSYM)
-                symType = eARMSymbol;
+                symType = ARMSymbolType_t::eARMSymbol;
             else if (mappingSymName == DATA_SEQUENCE_MAPSYM)
-                symType = eDataSymbol;
+                symType = ARMSymbolType_t::eDataSymbol;
             else if (mappingSymName == THUMB_SEQUENCE_MAPSYM)
-                symType = eThumbSymbol;
+                symType = ARMSymbolType_t::eThumbSymbol;
 
-            if (nextSymType != eUnknownSymbol)
+            if (nextSymType != ARMSymbolType_t::eUnknownSymbol)
             {
                 if (symbol.st_value >= lastMappingSymAddress && symbol.st_value < mappingSym.st_value)
                     break;
@@ -538,8 +538,8 @@ void StELFFile::dumpSections()
 
 void StELFFile::dumpSymbolTable()
 {
-    const char *symbolTypes[5] = { "NOTYPE", "OBJECT", "FUNC", "SECTION", "FILE" };
-    const char *symbolBinding[3] = { "LOCAL", "GLOBAL", "WEAK" };
+    const char *symbolTypes[] = { "NOTYPE", "OBJECT", "FUNC", "SECTION", "FILE" };
+    const char *symbolBinding[] = { "LOCAL", "GLOBAL", "WEAK" };
 
     unsigned count = getSymbolCount();
     unsigned i = 0;
@@ -549,8 +549,8 @@ void StELFFile::dumpSymbolTable()
         const Elf32_Sym &symbol = getSymbolAtIndex(i);
         std::string name = getSymbolName(symbol);
 
-        printf("'%s': %s, %s, 0x%08x, 0x%08x, %d. 0x%08x\n", name.c_str(), symbolTypes[ELF32_ST_TYPE(symbol.st_info)],
-               symbolBinding[ELF32_ST_BIND(symbol.st_info)], symbol.st_value, symbol.st_size, symbol.st_shndx,
+        printf("'%s': %s, %s, 0x%08x, 0x%08x, %d. 0x%08x\n", name.c_str(), symbolTypes[ELF32_ST_TYPE(symbol.st_info)%5],
+               symbolBinding[ELF32_ST_BIND(symbol.st_info)%3], symbol.st_value, symbol.st_size, symbol.st_shndx,
                symbol.st_other);
     }
 }

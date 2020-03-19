@@ -274,17 +274,19 @@ void BusPal::flushRX()
 // See See bus_pal.h for documentation on this method.
 BusPal::BusPal(int fileDescriptor)
     : m_fileDescriptor(fileDescriptor)
-    , m_mode(kBusPalModeBitBang)
+    , m_mode(bus_pal_mode_t::kBusPalModeBitBang)
     , m_spiWriteByteCount(0)
     , m_canFirstReadDelay(100)
+    , m_canWriteByteCount(0)    
 {
+    memset(&m_responseBuffer, 0, sizeof(m_responseBuffer));
 }
 
 bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &config)
 {
     if (!params[0].compare(0, 3, "spi"))
     {
-        config.function = BusPal::kBusPalFunction_SPI;
+        config.function = BusPal::bus_pal_function_t::kBusPalFunction_SPI;
 
         if ((params.size() > 1))
         {
@@ -306,11 +308,11 @@ bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &conf
                     {
                         if (!strcmp(params[4].c_str(), "lsb"))
                         {
-                            config.spiDirection = BusPal::kSpiLsbFirst;
+                            config.spiDirection = BusPal::spi_shift_direction_t::kSpiLsbFirst;
                         }
                         else if (!strcmp(params[4].c_str(), "msb"))
                         {
-                            config.spiDirection = BusPal::kSpiMsbFirst;
+                            config.spiDirection = BusPal::spi_shift_direction_t::kSpiMsbFirst;
                         }
                     }
                 }
@@ -319,7 +321,7 @@ bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &conf
     }
     else if (!params[0].compare(0, 3, "i2c"))
     {
-        config.function = BusPal::kBusPalFunction_I2C;
+        config.function = BusPal::bus_pal_function_t::kBusPalFunction_I2C;
 
         if (params.size() > 1)
         {
@@ -344,7 +346,7 @@ bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &conf
     }
     else if (!params[0].compare(0, 3, "can"))
     {
-        config.function = BusPal::kBusPalFunction_CAN;
+        config.function = BusPal::bus_pal_function_t::kBusPalFunction_CAN;
         if ((params.size() > 1))
         {
             uint32_t canSpeed = atoi(params[1].c_str());
@@ -372,7 +374,7 @@ bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &conf
             {
                 return false;
             }
-            config.function = kBusPalFunction_GPIO_CONFIG;
+            config.function = bus_pal_function_t::kBusPalFunction_GPIO_CONFIG;
             config.gpioPort = (uint8_t)*params[2].c_str();
             config.gpioPinNum = atoi(params[3].c_str());
             config.gpioMux = atoi(params[4].c_str());
@@ -383,7 +385,7 @@ bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &conf
             {
                 return false;
             }
-            config.function = kBusPalFunction_GPIO_SET;
+            config.function = bus_pal_function_t::kBusPalFunction_GPIO_SET;
             config.gpioPort = (uint8_t)*params[2].c_str();
             config.gpioPinNum = atoi(params[3].c_str());
             config.gpioLevel = atoi(params[4].c_str());
@@ -399,7 +401,7 @@ bool BusPal::parse(const string_vector_t &params, BusPal::BusPalConfigData &conf
         {
             return false;
         }
-        config.function = kBusPalFunction_FPGA_CLOCK_SET;
+        config.function = bus_pal_function_t::kBusPalFunction_FPGA_CLOCK_SET;
         config.fpgaClockMhz = atoi(params[1].c_str());
     }
     else
@@ -417,7 +419,7 @@ bool BusPal::enterSpiMode()
 
     if (retVal)
     {
-        m_mode = kBusPalModeSpi;
+        m_mode = bus_pal_mode_t::kBusPalModeSpi;
     }
 
     return retVal;
@@ -429,7 +431,7 @@ bool BusPal::enterCanMode()
 
     if (retVal)
     {
-        m_mode = kBusPalModeCan;
+        m_mode = bus_pal_mode_t::kBusPalModeCan;
     }
 
     return retVal;
@@ -489,7 +491,7 @@ bool BusPal::enterI2cMode()
 
     if (retVal)
     {
-        m_mode = kBusPalModeI2c;
+        m_mode = bus_pal_mode_t::kBusPalModeI2c;
     }
 
     return retVal;
@@ -643,9 +645,9 @@ bool BusPal::reset()
 // See See bus_pal.h for documentation on this method.
 bool BusPal::setSpiConfig(spi_clock_polarity_t polarity, spi_clock_phase_t phase, spi_shift_direction_t direction)
 {
-    uint8_t mask = (polarity & 1) << kSpiConfigShift_Polarity;
-    mask |= (phase & 1) << kSpiConfigShift_Phase;
-    mask |= (direction & 1) << kSpiConfigShift_Direction;
+    uint8_t mask = (static_cast<uint8_t>(polarity) & 1) << kSpiConfigShift_Polarity;
+    mask |= (static_cast<uint8_t>(phase) & 1) << kSpiConfigShift_Phase;
+    mask |= (static_cast<uint8_t>(direction) & 1) << kSpiConfigShift_Direction;
 
     uint8_t rc = writeCommand(kSpi_ConfigSpi | mask);
 
@@ -758,11 +760,11 @@ bool BusPal::write(const uint8_t *data, size_t byteCount)
 {
     switch (m_mode)
     {
-        case kBusPalModeSpi:
+        case bus_pal_mode_t::kBusPalModeSpi:
             return writeSpi(data, byteCount);
-        case kBusPalModeI2c:
+        case bus_pal_mode_t::kBusPalModeI2c:
             return writeI2c(data, byteCount);
-        case kBusPalModeCan:
+        case bus_pal_mode_t::kBusPalModeCan:
             return writeCan(data, byteCount);
         default:
             return false;
@@ -774,11 +776,11 @@ int BusPal::read(uint8_t *data, size_t byteCount)
 {
     switch (m_mode)
     {
-        case kBusPalModeSpi:
+        case bus_pal_mode_t::kBusPalModeSpi:
             return readSpi(data, byteCount);
-        case kBusPalModeCan:
+        case bus_pal_mode_t::kBusPalModeCan:
             return readCan(data, byteCount);
-        case kBusPalModeI2c:
+        case bus_pal_mode_t::kBusPalModeI2c:
         {
             if (!byteCount)
             {
@@ -1112,7 +1114,7 @@ int BusPal::buspal_serial_read(uint8_t *buf, int size, bool isCommandData)
         retVal = serial_read(m_fileDescriptor, (char *)buf, size);
     }
 
-    if (Log::getLogger()->getFilterLevel() == Logger::kDebug2)
+    if (Log::getLogger()->getFilterLevel() == Logger::log_level_t::kDebug2)
     {
         // Log bytes read in hex
         if (isCommandData)
@@ -1147,7 +1149,7 @@ int BusPal::buspal_serial_read(uint8_t *buf, int size, bool isCommandData)
 
 int BusPal::buspal_serial_write(uint8_t *buf, int size, bool isCommandData)
 {
-    if (Log::getLogger()->getFilterLevel() == Logger::kDebug2)
+    if (Log::getLogger()->getFilterLevel() == Logger::log_level_t::kDebug2)
     {
         // Log bytes written in hex
         if (isCommandData)

@@ -139,6 +139,20 @@ typedef struct PingResponse
     standard_version_t version; //!< Serial framing protocol version
     uint16_t options;           //!< Serial framing protocol options bitfield
     uint16_t crc16;             //!< CRC-16 of other fields
+#if defined(__cplusplus)
+    PingResponse()
+        : version()
+        , options(0)
+        , crc16(0)
+    {
+    }
+    PingResponse(standard_version_t _version, uint16_t _options, uint16_t _crc16)
+        : version(_version)
+        , options(_options)
+        , crc16(_crc16)
+    {
+    }
+#endif
 } ping_response_t;
 
 ////////////////////////////////////////////////////////////////////////////////

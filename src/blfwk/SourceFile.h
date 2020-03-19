@@ -60,7 +60,7 @@ public:
     static SourceFile *openFile(const std::string &path);
 
     //! Set of supported executable image file formats.
-    enum source_file_t
+    enum class source_file_t
     {
         kBinarySourceFile,   //!< \see blfwk::BinarySourceFile
         kELFSourceFile,      //!< \see blfwk::ELFSourceFile
@@ -166,7 +166,7 @@ class BinarySourceFile : public SourceFile
 {
 public:
     //! \brief Default constructor.
-    BinarySourceFile(const std::string &path, source_file_t sourceFileType = kBinarySourceFile);
+    BinarySourceFile(const std::string &path, source_file_t sourceFileType = source_file_t::kBinarySourceFile);
 
     //! \name Format capabilities
     //@{

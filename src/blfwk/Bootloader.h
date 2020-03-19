@@ -69,7 +69,7 @@ public:
         clock_t start = clock();
         cmd.sendTo(*m_hostPacketizer);
         clock_t finish = clock();
-        Log::debug("  - took %2.3f seconds\n", (double)(finish - start) / CLOCKS_PER_SEC);
+        Log::debug("  - took %2.3f seconds\n", (double)((double)finish - start) / CLOCKS_PER_SEC);
     }
 
     //! @brief Flush state.

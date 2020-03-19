@@ -97,7 +97,7 @@ public:
     typedef MemoryRegionList::const_iterator const_iterator;
 
     //! The possible actions for regions matching an address filter range.
-    typedef enum
+    typedef enum class _AddressFilterAction
     {
         ADDR_FILTER_NONE,    //!< Do nothing.
         ADDR_FILTER_ERROR,   //!< Raise an error exception.

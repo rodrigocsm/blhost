@@ -70,7 +70,7 @@ void BusPalUartPeripheral::configure(const BusPal::BusPalConfigData &config)
 {
     switch (config.function)
     {
-        case BusPal::kBusPalFunction_SPI:
+    case BusPal::bus_pal_function_t::kBusPalFunction_SPI:
             if (!m_busPal->enterSpiMode())
             {
                 throw std::runtime_error(format_string("Error: BusPalUartPeripheral() cannot enter SPI Mode."));
@@ -87,14 +87,14 @@ void BusPalUartPeripheral::configure(const BusPal::BusPalConfigData &config)
                 throw std::runtime_error(format_string(
                     "Error: BusPalUartPeripheral() cannot set SPI polarity(%s(%d)), phase(%s(%d)), and "
                     "direction(%s(%d)).",
-                    config.spiPolarity == BusPal::kSpiClockPolarity_ActiveHigh ? "ActiveHigh" : "ActiveLow",
+                    config.spiPolarity == BusPal::spi_clock_polarity_t::kSpiClockPolarity_ActiveHigh ? "ActiveHigh" : "ActiveLow",
                     config.spiPolarity,
-                    config.spiPhase == BusPal::kSpiClockPhase_FirstEdge ? "FirstEdge" : "SecondEdge", config.spiPhase,
-                    config.spiDirection == BusPal::kSpiLsbFirst ? "LsbFirst" : "MsbFirst", config.spiDirection));
+                    config.spiPhase == BusPal::spi_clock_phase_t::kSpiClockPhase_FirstEdge ? "FirstEdge" : "SecondEdge", config.spiPhase,
+                    config.spiDirection == BusPal::spi_shift_direction_t::kSpiLsbFirst ? "LsbFirst" : "MsbFirst", config.spiDirection));
             }
             break;
 
-        case BusPal::kBusPalFunction_CAN:
+        case BusPal::bus_pal_function_t::kBusPalFunction_CAN:
             if (!m_busPal->enterCanMode())
             {
                 throw std::runtime_error(format_string("Error: BusPalUartPeripheral() cannot enter CAN Mode."));
@@ -120,7 +120,7 @@ void BusPalUartPeripheral::configure(const BusPal::BusPalConfigData &config)
 
             break;
 
-        case BusPal::kBusPalFunction_I2C:
+        case BusPal::bus_pal_function_t::kBusPalFunction_I2C:
             if (!m_busPal->enterI2cMode())
             {
                 throw std::runtime_error(format_string("Error: BusPalUartPeripheral() cannot enter I2C Mode."));
@@ -138,7 +138,7 @@ void BusPalUartPeripheral::configure(const BusPal::BusPalConfigData &config)
             }
             break;
 
-        case BusPal::kBusPalFunction_GPIO_CONFIG:
+        case BusPal::bus_pal_function_t::kBusPalFunction_GPIO_CONFIG:
             if (!m_busPal->enterBitBangMode())
             {
                 throw std::runtime_error(
@@ -152,7 +152,7 @@ void BusPalUartPeripheral::configure(const BusPal::BusPalConfigData &config)
             }
             break;
 
-        case BusPal::kBusPalFunction_GPIO_SET:
+        case BusPal::bus_pal_function_t::kBusPalFunction_GPIO_SET:
             if (!m_busPal->enterBitBangMode())
             {
                 throw std::runtime_error(
@@ -165,7 +165,7 @@ void BusPalUartPeripheral::configure(const BusPal::BusPalConfigData &config)
             }
             break;
 
-        case BusPal::kBusPalFunction_FPGA_CLOCK_SET:
+        case BusPal::bus_pal_function_t::kBusPalFunction_FPGA_CLOCK_SET:
             if (!m_busPal->enterBitBangMode())
             {
                 throw std::runtime_error(

@@ -38,14 +38,14 @@ size_t SizedIntegerValue::getSize() const
 {
     switch (m_size)
     {
-        case kWordSize:
+        case int_size_t::kWordSize:
             return sizeof(uint32_t);
-        case kHalfWordSize:
+        case int_size_t::kHalfWordSize:
             return sizeof(uint16_t);
-        case kByteSize:
+        case int_size_t::kByteSize:
             return sizeof(uint8_t);
     }
-    return kWordSize;
+    return static_cast<size_t>(int_size_t::kWordSize);
 }
 
 //! The resulting mask can be used to truncate the integer value to be
@@ -54,11 +54,11 @@ uint32_t SizedIntegerValue::getWordSizeMask() const
 {
     switch (m_size)
     {
-        case kWordSize:
+        case int_size_t::kWordSize:
             return 0xffffffff;
-        case kHalfWordSize:
+        case int_size_t::kHalfWordSize:
             return 0x0000ffff;
-        case kByteSize:
+        case int_size_t::kByteSize:
             return 0x000000ff;
     }
     return 0;

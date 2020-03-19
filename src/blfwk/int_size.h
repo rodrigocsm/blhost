@@ -33,7 +33,7 @@
 namespace blfwk
 {
 //! Supported sizes of integers.
-typedef enum
+typedef enum class _int_size_t
 {
     kWordSize,     //!< 32-bit word.
     kHalfWordSize, //!< 16-bit half word.

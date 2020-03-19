@@ -100,6 +100,8 @@ UsbHidPeripheral::~UsbHidPeripheral()
 status_t UsbHidPeripheral::read(uint8_t *buffer, uint32_t requestedBytes, uint32_t *actualBytes, uint32_t timeout)
 {
     assert(buffer);
+    if (!buffer)
+        return kStatus_Fail;
 
     // Read the requested number of bytes.
     int count = hid_read_timeout(m_device, buffer, requestedBytes, timeout);
@@ -108,7 +110,7 @@ status_t UsbHidPeripheral::read(uint8_t *buffer, uint32_t requestedBytes, uint32
         *actualBytes = count;
     }
 
-    if (Log::getLogger()->getFilterLevel() == Logger::kDebug2)
+    if (Log::getLogger()->getFilterLevel() == Logger::log_level_t::kDebug2)
     {
         // Log bytes read in hex
         Log::debug2("<");
@@ -144,8 +146,10 @@ status_t UsbHidPeripheral::read(uint8_t *buffer, uint32_t requestedBytes, uint32
 status_t UsbHidPeripheral::write(const uint8_t *buffer, uint32_t byteCount, uint32_t timeoutMS)
 {
     assert(buffer);
+    if (!buffer)
+        return kStatus_Fail;
 
-    if (Log::getLogger()->getFilterLevel() == Logger::kDebug2)
+    if (Log::getLogger()->getFilterLevel() == Logger::log_level_t::kDebug2)
     {
         // Log bytes written in hex
         Log::debug2("[");

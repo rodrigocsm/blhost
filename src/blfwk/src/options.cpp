@@ -348,7 +348,7 @@ inline static int isOptsOnly(unsigned flags)
 }
 
 // return values for a keyword matching function
-enum kwdmatch_t
+enum class kwdmatch_t
 {
     NO_MATCH,
     PARTIAL_MATCH,
@@ -388,21 +388,21 @@ static kwdmatch_t kwdmatch(const char *src, const char *attempt, int len = 0)
     int i;
 
     if (src == attempt)
-        return EXACT_MATCH;
+        return kwdmatch_t::EXACT_MATCH;
     if ((src == NULL) || (attempt == NULL))
-        return NO_MATCH;
+        return kwdmatch_t::NO_MATCH;
     if ((!*src) && (!*attempt))
-        return EXACT_MATCH;
+        return kwdmatch_t::EXACT_MATCH;
     if ((!*src) || (!*attempt))
-        return NO_MATCH;
+        return kwdmatch_t::NO_MATCH;
 
     for (i = 0; ((i < len) || (len == 0)) && (attempt[i]) && (attempt[i] != ' '); i++)
     {
         if (TOLOWER(src[i]) != TOLOWER(attempt[i]))
-            return NO_MATCH;
+            return kwdmatch_t::NO_MATCH;
     }
 
-    return (src[i]) ? PARTIAL_MATCH : EXACT_MATCH;
+    return (src[i]) ? kwdmatch_t::PARTIAL_MATCH : kwdmatch_t::EXACT_MATCH;
 }
 
 // **************************************************************** OptionSpec
@@ -794,11 +794,11 @@ const char *Options::match_longopt(const char *opt, int len, int &ambiguous) con
         if (longopt == NULL)
             continue;
         result = kwdmatch(longopt, opt, len);
-        if (result == EXACT_MATCH)
+        if (result == kwdmatch_t::EXACT_MATCH)
         {
             return optspec;
         }
-        else if (result == PARTIAL_MATCH)
+        else if (result == kwdmatch_t::PARTIAL_MATCH)
         {
             if (matched)
             {
@@ -851,7 +851,7 @@ int Options::parse_opt(OptIter &iter, const char *&optarg)
     listopt = NULLSTR; // reset the list pointer
 
     if ((optvec == NULL) || (!*optvec))
-        return Options::ENDOPTS;
+        return static_cast<int>(Options::OptRC::ENDOPTS);
 
     // Try to match a known option
     OptionSpec optspec = match_opt(*(nextchar++), (optctrls & Options::ANYCASE));
@@ -882,7 +882,7 @@ int Options::parse_opt(OptIter &iter, const char *&optarg)
             cerr << cmdname << ": unknown option -" << *(nextchar - 1) << "." << endl;
         }
         optarg = (nextchar - 1); // record the bad option in optarg
-        return Options::BADCHAR;
+        return static_cast<int>(Options::OptRC::BADCHAR);
     }
 
     // If no argument is taken, then leave now
@@ -961,7 +961,7 @@ int Options::parse_longopt(OptIter &iter, const char *&optarg)
     listopt = NULLSTR; // reset the list-spec
 
     if ((optvec == NULL) || (!*optvec))
-        return Options::ENDOPTS;
+        return  static_cast<int>(Options::OptRC::ENDOPTS);
 
     // if a value is supplied in this argv element, get it now
     const char *val = strpbrk(nextchar, ":=");
@@ -1001,7 +1001,7 @@ int Options::parse_longopt(OptIter &iter, const char *&optarg)
         }
         optarg = nextchar;  // record the bad option in optarg
         nextchar = NULLSTR; // we've exhausted this argument
-        return (ambiguous) ? Options::AMBIGUOUS : Options::BADKWD;
+        return  static_cast<int>((ambiguous)) ? static_cast<int>(Options::OptRC::AMBIGUOUS) : static_cast<int>(Options::OptRC::BADKWD);
     }
 
     // If no argument is taken, then leave now
@@ -1212,7 +1212,7 @@ int Options::operator()(OptIter &iter, const char *&optarg)
         if (arg == NULL)
         {
             listopt = NULLSTR;
-            return Options::ENDOPTS;
+            return static_cast<int>(Options::OptRC::ENDOPTS);
         }
         else if ((!explicit_end) && isEndOpts(arg))
         {
@@ -1220,7 +1220,7 @@ int Options::operator()(OptIter &iter, const char *&optarg)
             listopt = NULLSTR;
             explicit_end = 1;
             if (parse_opts_only)
-                return Options::ENDOPTS;
+                return  static_cast<int>(Options::OptRC::ENDOPTS);
             get_next_arg = 1; // make sure we look at the next argument.
         }
     } while (get_next_arg);
@@ -1230,13 +1230,13 @@ int Options::operator()(OptIter &iter, const char *&optarg)
     {
         if (parse_opts_only)
         {
-            return Options::ENDOPTS;
+            return  static_cast<int>(Options::OptRC::ENDOPTS);
         }
         else
         {
             optarg = arg; // set optarg to the positional argument
             iter.next();  // advance iterator to the next argument
-            return Options::POSITIONAL;
+            return  static_cast<int>(Options::OptRC::POSITIONAL);
         }
     }
 

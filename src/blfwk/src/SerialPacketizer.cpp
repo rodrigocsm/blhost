@@ -78,6 +78,13 @@ SerialPacketizer::SerialPacketizer(UartPeripheral *peripheral, uint32_t packetTi
     memset(&m_serialContext, 0, sizeof(m_serialContext));
 }
 
+blfwk::SerialPacketizer::SerialPacketizer(D2xxPeripheral* peripheral, uint32_t packetTimeoutMs)
+    : Packetizer(dynamic_cast<Peripheral*>(peripheral), packetTimeoutMs)
+{
+    // Clear the initial serial context
+    memset(&m_serialContext, 0, sizeof(m_serialContext));
+}
+
 // See SerialPacketizer.h for documentation of this method.
 SerialPacketizer::~SerialPacketizer()
 {
@@ -181,7 +188,7 @@ status_t SerialPacketizer::ping(int retries, unsigned int delay, ping_response_t
 
                 host_delay(kReadDelayMilliseconds);
 #if defined(WIN32)
-                duration = (double)(clock() - start) / CLOCKS_PER_SEC; // Windows: CLOCKS_PER_SEC = 1,000.
+                duration = (double)((double)clock() - (double)start) / CLOCKS_PER_SEC; // Windows: CLOCKS_PER_SEC = 1,000.
 #else
                 duration = (double)(current_timestamp() - start) / 1000.0; // Linux and Mac
 #endif
@@ -367,7 +374,7 @@ status_t SerialPacketizer::serial_packet_write(const uint8_t *packet, uint32_t b
     serial_framing_packet_t *framingPacket = &m_serialContext.framingPacket;
     framingPacket->dataPacket.header.startByte = kFramingPacketStartByte;
     framingPacket->dataPacket.header.packetType = kFramingPacketType_Command;
-    if (packetType != kPacketType_Command)
+    if (packetType != packet_type_t::kPacketType_Command)
     {
         framingPacket->dataPacket.header.packetType = kFramingPacketType_Data;
     }
@@ -533,7 +540,7 @@ status_t SerialPacketizer::read_data_packet(framing_data_packet_t *packet, uint8
 
     uint8_t expectedPacketType = kFramingPacketType_Command;
 
-    if (packetType != kPacketType_Command)
+    if (packetType != packet_type_t::kPacketType_Command)
     {
         expectedPacketType = kFramingPacketType_Data;
     }
@@ -605,7 +612,7 @@ status_t SerialPacketizer::read_start_byte(framing_header_t *header)
         host_delay(kDefaultByteReadTimeoutMs);
 
 #if defined(WIN32)
-        duration = (double)(clock() - start) / CLOCKS_PER_SEC; // Windows: CLOCKS_PER_SEC = 1,000.
+        duration = (double)((double)clock() - (double)start) / CLOCKS_PER_SEC; // Windows: CLOCKS_PER_SEC = 1,000.
 #else
         duration = (double)(current_timestamp() - start) / 1000.0; // Linux and Mac
 #endif

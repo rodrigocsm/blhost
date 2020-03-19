@@ -85,8 +85,9 @@ typedef struct CommandProcessorData
         : state(kCommandState_CommandPhase)
         , packet(NULL)
         , packetLength(0)
-        , dataPhase()
-    {
+        , handlerEntry()
+        , dataPhase()        
+    {        
     }
 #endif
 } command_processor_data_t;

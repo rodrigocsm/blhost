@@ -197,10 +197,11 @@ const peripheral_t kPeripheral_Can(0x00000008, "CAN");
 const peripheral_t kPeripheral_UsbHid(0x00000010, "USB HID");
 const peripheral_t kPeripheral_UsbCdc(0x00000020, "USB CDC");
 const peripheral_t kPeripheral_UsbDfu(0x00000040, "USB DFU");
+const peripheral_t kPeripheral_D2xx(0x00000080, "FTDI D2XX");
 
-const array<const peripheral_t, 7> kPeripherals = { kPeripheral_Uart,  kPeripheral_I2C,    kPeripheral_Spi,
+const array<const peripheral_t, 8> kPeripherals = { kPeripheral_Uart,  kPeripheral_I2C,    kPeripheral_Spi,
                                                     kPeripheral_Can,   kPeripheral_UsbHid, kPeripheral_UsbCdc,
-                                                    kPeripheral_UsbDfu };
+                                                    kPeripheral_UsbDfu, kPeripheral_D2xx };
 //@}
 
 //! @brief Entry in a lookup table of status messages.
@@ -737,6 +738,8 @@ public:
     {
         assert(dataProducer);
         m_dataProducer = dataProducer;
+        m_dataConsumer = NULL;
+        memset(m_packet, 0, sizeof(m_packet));
     }
 
     //! @brief Constructor that takes a DataConsumer.
@@ -744,6 +747,8 @@ public:
     {
         assert(dataConsumer);
         m_dataConsumer = dataConsumer;
+        m_dataProducer = NULL;
+        memset(m_packet, 0, sizeof(m_packet));
     }
 
     //! @brief Send data packet to device.
@@ -806,6 +811,7 @@ public:
     GetProperty(const string_vector_t *argv)
         : Command(argv)
         , m_property(kProperty_Invalid.value, kProperty_Invalid.description)
+        , m_memoryId(0)
     {
     }
 
@@ -813,6 +819,7 @@ public:
     GetProperty(property_t property)
         : Command(kCommand_GetProperty.name)
         , m_property(property)
+        , m_memoryId(0)
     {
         m_argv.push_back(format_string("0x%08x", property.value));
     }
@@ -848,6 +855,8 @@ public:
     //! @brief Constructor that takes an argument vector.
     SetProperty(const string_vector_t *argv)
         : Command(argv)
+        , m_propertyTag(0)
+        , m_propertyValue(0)
     {
     }
 
@@ -889,6 +898,8 @@ public:
     //! @brief Constructor that takes an argument vector.
     FlashEraseRegion(const string_vector_t *argv)
         : Command(argv)
+        , m_startAddress(0)
+        , m_byteCount(0)
     {
     }
 
@@ -930,6 +941,7 @@ public:
     //! @brief Constructor that takes an argument vector.
     FlashEraseAll(const string_vector_t *argv)
         : Command(argv)
+        , m_memoryId(0)
     {
     }
 
@@ -999,9 +1011,11 @@ class ReadMemory : public Command
 {
 public:
     //! @brief Constructor that takes an argument vector.
-    ReadMemory(const string_vector_t *argv)
+    ReadMemory(const string_vector_t* argv)
         : Command(argv)
         , m_dataFile()
+        , m_byteCount(0)
+        , m_startAddress(0)
     {
     }
 
@@ -1102,6 +1116,9 @@ public:
     //! @brief Constructor that takes an argument vector.
     FillMemory(const string_vector_t *argv)
         : Command(argv)
+        , m_byteCount(0)
+        , m_patternWord(0)
+        , m_startAddress(0)
     {
     }
 
@@ -1172,6 +1189,9 @@ public:
     //! @brief Constructor that takes an argument vector.
     Execute(const string_vector_t *argv)
         : Command(argv)
+        , m_jumpAddress(0)
+        , m_wordArgument(0)
+        , m_stackpointer(0)
     {
     }
 
@@ -1216,6 +1236,8 @@ public:
     //! @brief Constructor that takes an argument vector.
     Call(const string_vector_t *argv)
         : Command(argv)
+        , m_callAddress(0)
+        , m_wordArgument(0)
     {
     }
 
@@ -1246,6 +1268,8 @@ public:
     //! @brief Constructor that takes an argument vector.
     FlashSecurityDisable(const string_vector_t *argv)
         : Command(argv)
+        , m_keyHigh(0)
+        , m_keyLow(0)
     {
     }
 
@@ -1285,6 +1309,10 @@ public:
     //! @brief Constructor that takes an argument vector.
     FlashProgramOnce(const string_vector_t *argv)
         : Command(argv)
+        , m_index(0)
+        , m_byteCount(0)
+        , m_dataLow(0)
+        , m_dataHigh(0)
     {
     }
 
@@ -1328,6 +1356,8 @@ public:
     //! @brief Constructor that takes an argument vector.
     FlashReadOnce(const string_vector_t *argv)
         : Command(argv)
+        , m_index(0)
+        , m_byteCount(0)
     {
     }
 
@@ -1362,7 +1392,10 @@ public:
     //! @brief Constructor that takes an argument vector.
     FlashReadResource(const string_vector_t *argv)
         : Command(argv)
-        , m_dataFile()
+        , m_dataFile("")
+        , m_byteCount(0)
+        , m_option(0)
+        , m_startAddress(0)
     {
     }
 
@@ -1399,6 +1432,8 @@ public:
     //! @brief Constructor that takes an argument vector.
     ConfigureQuadSpi(const string_vector_t *argv)
         : Command(argv)
+        , m_configBlockAddress(0)
+        , m_flashMemId(0)
     {
     }
 
@@ -1430,6 +1465,7 @@ public:
     //! @brief Constructor that takes an argument vector.
     ReliableUpdate(const string_vector_t *argv)
         : Command(argv)
+        , m_address(0)
     {
     }
 
@@ -1551,9 +1587,9 @@ protected:
 
 protected:
     uint32_t spiSpeedKHz = 100;
-    BusPal::spi_clock_polarity_t spiPolarity = BusPal::kSpiClockPolarity_ActiveLow;
-    BusPal::spi_clock_phase_t spiPhase = BusPal::kSpiClockPhase_SecondEdge;
-    BusPal::spi_shift_direction_t spiDirection = BusPal::kSpiMsbFirst;
+    BusPal::spi_clock_polarity_t spiPolarity = BusPal::spi_clock_polarity_t::kSpiClockPolarity_ActiveLow;
+    BusPal::spi_clock_phase_t spiPhase = BusPal::spi_clock_phase_t::kSpiClockPhase_SecondEdge;
+    BusPal::spi_shift_direction_t spiDirection = BusPal::spi_shift_direction_t::kSpiMsbFirst;
 };
 
 /*!
